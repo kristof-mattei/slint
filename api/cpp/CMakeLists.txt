@@ -149,7 +149,17 @@ if(SLINT_FEATURE_COMPILER AND NOT SLINT_COMPILER)
         PROPERTY CORROSION_NO_DEFAULT_FEATURES
         ON
     )
-    list(APPEND slint_compiler_features "software-renderer")
+
+    # Don't enable the software-renderer when cross-compiling, as it relies on pkg-config
+    # to have access to the host packages to link against font-config, which is not possible
+    # with Yocto. In yocto, pkg-config is provided by the yocto host sysroot and it always
+    # searches for the target.
+    # Our own Yocto builds build the slint compiler separately as a host build and then inject
+    # it via the SLINT_COMPILER cache variable.
+    if(NOT (CMAKE_CROSSCOMPILING AND DEFINED ENV{PKG_CONFIG_PATH}) OR SLINT_FEATURE_FREESTANDING)
+        list(APPEND slint_compiler_features "software-renderer")
+    endif()
+
     if (SLINT_FEATURE_SDF_FONTS)
         list(APPEND slint_compiler_features "sdf-fonts")
     endif()
